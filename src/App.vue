@@ -1,9 +1,9 @@
 <template>
   <div id="app">
     <el-row :gutter="20">
-      <el-row>
+      <el-row class="topRow">
         <el-col :span="6">
-          <el-select v-model="selectValue" clearable placeholder="请选择账单事件">
+          <el-select v-model="selectValue" clearable placeholder="请选择账单时间">
             <el-option v-for="item in timeFilter" :key="item" :value="item"></el-option>
           </el-select>
         </el-col>
@@ -22,7 +22,7 @@
         </el-col>
       </el-row>
       <el-col :span="14">
-        <el-table row-key="id" :data="billList|billShow" height="500">
+        <el-table border row-key="id" :data="billList|billShow" height="500">
           <el-table-column
               fixed
               prop="timeFor"
@@ -34,11 +34,7 @@
               sortable
               label="账单类型">
             <template slot-scope="scope">
-              <p v-if="isSetId!=scope.row.id">{{ scope.row.type|typeFor(that) }}</p>
-              <el-select v-else size="mini" v-model="addBillInfo.type" clearable>
-                <el-option v-for="item in Object.keys(typeKey)" :key="item" :label="typeKey[item]"
-                           :value="item"></el-option>
-              </el-select>
+              <p>{{ scope.row.type|typeFor(that) }}</p>
             </template>
           </el-table-column>
           <el-table-column
@@ -67,6 +63,7 @@
       </el-col>
       <el-col :span="10">
         <el-table
+            border
             ref="table"
             :data="sumList.data"
             row-key="category"
@@ -125,8 +122,15 @@ export default {
     }
   },
   watch: {
-    selectValue: function (newVal) {
-      this.selectValue = newVal;
+    addBillInfo: {
+      handler: function (newVal) {
+        if (newVal.category) {
+          this.addBillInfo.type = this.categoryKey[newVal.category].type
+        }
+      },
+      deep: true
+    },
+    selectValue: function () {
       this.selectInfo();
     },
     selectCategorValue: function () {
@@ -134,42 +138,7 @@ export default {
     },
     billList: {
       handler: function (newVal) {
-        let info = {}, sumList = [], rowNum = {}, amountNum = {};
-        // 根据账单类型和账单分类进行统计
-        newVal.filter(v => v.isShow == void 0 || v.isShow).forEach(v => {
-          if (!info[v.type]) {
-            info[v.type] = {}
-            info[v.type][v.category] = Number(v.amount)
-            rowNum[v.type] = 1
-          } else {
-            if (!info[v.type][v.category]) {
-              info[v.type][v.category] = Number(v.amount)
-              rowNum[v.type] += 1
-            } else {
-              info[v.type][v.category] += Number(v.amount)
-            }
-          }
-        });
-        for (let type in info) {
-          // 求出所有支出和收入的合计 并以类型为key进行保存
-          let allTypeMoney = Object.values(info[type]).reduce((num, total) => num + total, 0);
-          amountNum[type] = allTypeMoney
-          // 单元格合并记录 支出和收入开始行数 各占多少行
-          rowNum[type] = [sumList.length, rowNum[type]]
-          for (let category in info[type]) {
-            sumList.push({type, category, amount: info[type][category]})
-          }
-        }
-        sumList = sumList.sort((a, b) => {
-          if (a.type != b.type) {
-            return a.type - b.type
-          } else {
-            return b.amount - a.amount
-          }
-        })
-        this.$set(this.sumList, "rowNum", rowNum);
-        this.$set(this.sumList, "data", sumList);
-        this.$set(this.sumList, "amountNum", amountNum);
+        this.watchBillList(newVal)
       },
       deep: true
     }
@@ -178,6 +147,45 @@ export default {
     this.getData();
   },
   methods: {
+    // billList监听到的修改需要执行的操作
+    watchBillList: function (newVal) {
+      let info = {}, sumList = [], rowNum = {}, amountNum = {};
+      // 根据账单类型和账单分类进行统计
+      newVal.filter(v => (v.isShow == void 0 || v.isShow) && v.category && v.amount).forEach(v => {
+        if (!info[v.type]) {
+          info[v.type] = {}
+          info[v.type][v.category] = Number(v.amount)
+          rowNum[v.type] = 1
+        } else {
+          if (!info[v.type][v.category]) {
+            info[v.type][v.category] = Number(v.amount)
+            rowNum[v.type] += 1
+          } else {
+            info[v.type][v.category] += Number(v.amount)
+          }
+        }
+      });
+      for (let type in info) {
+        // 求出所有支出和收入的合计 并以类型为key进行保存
+        let allTypeMoney = Object.values(info[type]).reduce((num, total) => num + total, 0);
+        amountNum[type] = allTypeMoney
+        // 单元格合并记录 支出和收入开始行数 各占多少行
+        rowNum[type] = [sumList.length, rowNum[type]]
+        for (let category in info[type]) {
+          sumList.push({type, category, amount: info[type][category]})
+        }
+      }
+      sumList = sumList.sort((a, b) => {
+        if (a.type != b.type) {
+          return a.type - b.type
+        } else {
+          return b.amount - a.amount
+        }
+      })
+      this.$set(this.sumList, "rowNum", rowNum);
+      this.$set(this.sumList, "data", sumList);
+      this.$set(this.sumList, "amountNum", amountNum);
+    },
     // 统一筛选方法
     selectInfo: function () {
       let categorValue = this.selectCategorValue;
@@ -257,6 +265,7 @@ export default {
         info[key] = value
       }
       this.selectValue = ""
+      this.selectCategorValue = ""
       this.addBillInfo = info;
       this.billList.unshift(this.addBillInfo);
     },
@@ -330,6 +339,10 @@ export default {
 <style scoped>
 #app {
   padding: 10px;
+}
+
+.topRow {
+  margin-bottom: 10px;
 }
 
 </style>
