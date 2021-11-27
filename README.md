@@ -2,6 +2,8 @@
 
 ### 项目设置
 
+* node版本 v12.13.0
+
 ```
 npm install
 ```
@@ -11,6 +13,8 @@ npm install
 ```
 npm run serve
 ```
+
+* 项目地址：http://localhost:8080/
 
 ### 项目思路
 
