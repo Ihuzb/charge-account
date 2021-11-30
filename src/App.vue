@@ -33,16 +33,16 @@
               prop="type"
               sortable
               label="账单类型">
-            <template slot-scope="scope">
-              <p>{{ scope.row.type|typeFor(that) }}</p>
+            <template v-slot="{row}">
+              <p>{{ row.type|typeFor(that) }}</p>
             </template>
           </el-table-column>
           <el-table-column
               prop="category"
               sortable
               label="账单分类">
-            <template slot-scope="scope">
-              <p v-if="isSetId!=scope.row.id">{{ scope.row.category|categoryFor(that) }}</p>
+            <template v-slot="{row}">
+              <p v-if="isSetId!=row.id">{{ row.category|categoryFor(that) }}</p>
               <el-select v-else size="mini" v-model="addBillInfo.category" clearable>
                 <el-option v-for="item in Object.values(categoryKey)" :key="item.id" :label="item.name"
                            :value="item.id"></el-option>
@@ -54,8 +54,8 @@
               sortable
               :sort-method="sortMethod"
               label="账单金额">
-            <template slot-scope="scope">
-              <p v-if="isSetId!=scope.row.id">{{ scope.row.amount|amountFor }}</p>
+            <template v-slot="{row}">
+              <p v-if="isSetId!=row.id">{{ row.amount|amountFor }}</p>
               <el-input v-else v-model="addBillInfo.amount" size="mini" type="number"/>
             </template>
           </el-table-column>
@@ -74,22 +74,22 @@
           <el-table-column
               prop="type"
               label="账单类型">
-            <template slot-scope="scope">
-              <p>{{ scope.row.type|typeFor(that,"amount") }}</p>
+            <template v-slot="{row}">
+              <p>{{ row.type|typeFor(that,"amount") }}</p>
             </template>
           </el-table-column>
           <el-table-column
               prop="category"
               label="账单分类">
-            <template slot-scope="scope">
-              <p>{{ scope.row.category|categoryFor(that) }}</p>
+            <template v-slot="{row}">
+              <p>{{ row.category|categoryFor(that) }}</p>
             </template>
           </el-table-column>
           <el-table-column
               prop="amount"
               label="账单金额">
-            <template slot-scope="scope">
-              <p>{{ scope.row.amount|amountFor }}</p>
+            <template v-slot="{row}">
+              <p>{{ row.amount|amountFor }}</p>
             </template>
           </el-table-column>
         </el-table>
